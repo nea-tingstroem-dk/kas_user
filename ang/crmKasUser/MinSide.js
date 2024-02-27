@@ -11,8 +11,8 @@
         resolve: {
           myContact: function(crmApi) {
             return crmApi('Contact', 'getsingle', {
-              id: 'user_contact_id',
-              return: ['first_name', 'last_name']
+              id: 'user_contact_id'
+//              return: ['first_name', 'last_name', 'external_identifier']
             });
           }
         }
