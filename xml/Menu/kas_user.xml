@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/kas/sailing</path>
+    <page_callback>CRM_KasUser_Form_SailingMenu</page_callback>
+    <title>SailingMenu</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>

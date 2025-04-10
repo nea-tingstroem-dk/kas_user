@@ -1,0 +1,61 @@
+<af-form ctrl="afform">
+  <af-entity data="{contact_type: 'Individual', source: 'Indmeldelse'}" type="Contact" name="Individual1" label="Person 1" actions="{create: true, update: true}" security="RBAC" />
+  <af-entity data="{contact_type: 'Organization', source: 'Indmeldelse'}" type="Contact" name="Organization1" label="Organisation 1" actions="{create: true, update: true}" security="RBAC" />
+  <af-entity security="FBAC" type="Relationship" name="Relationship1" label="Relationship 1" actions="{create: true, update: true}" />
+  <fieldset af-fieldset="Individual1" class="af-container af-container-style-pane">
+    <div class="af-container">
+      <div class="af-container af-layout-inline">
+        <af-field name="first_name" defn="{label: 'Fornavn', input_attrs: {}, required: true}" />
+        <af-field name="last_name" defn="{label: 'Efternavn', input_attrs: {}, required: true}" />
+      </div>
+    </div>
+    <div af-join="Email">
+      <div class="af-container af-layout-inline">
+        <af-field name="email" />
+      </div>
+    </div>
+    <div class="af-container af-layout-inline">
+      <af-field name="birth_date" defn="{options: [{id: 'this.day', label: 'Today'}, {id: 'this.week', label: 'This week'}, {id: 'this.month', label: 'This calendar month'}, {id: 'this.quarter', label: 'This quarter'}, {id: 'this.fiscal_year', label: 'This fiscal year'}, {id: 'this.year', label: 'This calendar year'}, {id: 'previous.day', label: 'Yesterday'}, {id: 'previous.week', label: 'Previous week'}, {id: 'previous.month', label: 'Previous calendar month'}, {id: 'previous.quarter', label: 'Previous quarter'}, {id: 'previous.fiscal_year', label: 'Previous fiscal year'}, {id: 'previous.year', label: 'Previous calendar year'}, {id: 'ending.week', label: 'Last 7 days including today'}, {id: 'ending.month', label: 'Last 30 days including today'}, {id: 'ending_2.month', label: 'Last 60 days including today'}, {id: 'ending.quarter', label: 'Last 90 days including today'}, {id: 'ending.year', label: 'Last 12 months including today'}, {id: 'ending_2.year', label: 'Last 2 years including today'}, {id: 'ending_3.year', label: 'Last 3 years including today'}, {id: 'starting.day', label: 'Tomorrow'}, {id: 'next.week', label: 'Next week'}, {id: 'next.month', label: 'Next calendar month'}, {id: 'next.quarter', label: 'Next quarter'}, {id: 'next.fiscal_year', label: 'Next fiscal year'}, {id: 'next.year', label: 'Next calendar year'}, {id: 'starting.week', label: 'Next 7 days including today'}, {id: 'starting.month', label: 'Next 30 days including today'}, {id: 'starting_2.month', label: 'Next 60 days including today'}, {id: 'starting.quarter', label: 'Next 90 days including today'}, {id: 'starting.year', label: 'Next 12 months including today'}, {id: 'current.week', label: 'Current week to-date'}, {id: 'current.month', label: 'Current calendar month to-date'}, {id: 'current.quarter', label: 'Current quarter to-date'}, {id: 'current.year', label: 'Current calendar year to-date'}, {id: 'earlier.day', label: 'To end of yesterday'}, {id: 'earlier.week', label: 'To end of previous week'}, {id: 'earlier.month', label: 'To end of previous calendar month'}, {id: 'earlier.quarter', label: 'To end of previous quarter'}, {id: 'earlier.year', label: 'To end of previous calendar year'}, {id: 'greater.day', label: 'From start of current day'}, {id: 'greater.week', label: 'From start of current week'}, {id: 'greater.month', label: 'From start of current calendar month'}, {id: 'greater.quarter', label: 'From start of current quarter'}, {id: 'greater.year', label: 'From start of current calendar year'}, {id: 'less.week', label: 'To end of current week'}, {id: 'less.month', label: 'To end of current calendar month'}, {id: 'less.quarter', label: 'To end of current quarter'}, {id: 'less.year', label: 'To end of current calendar year'}, {id: 'previous_2.day', label: 'Previous 2 days'}, {id: 'previous_2.week', label: 'Previous 2 weeks'}, {id: 'previous_2.month', label: 'Previous 2 calendar months'}, {id: 'previous_2.quarter', label: 'Previous 2 quarters'}, {id: 'previous_2.year', label: 'Previous 2 calendar years'}, {id: 'previous_before.day', label: 'Day prior to yesterday'}, {id: 'previous_before.week', label: 'Week prior to previous week'}, {id: 'previous_before.month', label: 'Month prior to previous calendar month'}, {id: 'previous_before.quarter', label: 'Quarter prior to previous quarter'}, {id: 'previous_before.year', label: 'Year prior to previous calendar year'}, {id: 'greater_previous.week', label: 'From end of previous week'}, {id: 'greater_previous.month', label: 'From end of previous calendar month'}, {id: 'greater_previous.quarter', label: 'From end of previous quarter'}, {id: 'greater_previous.year', label: 'From end of previous calendar year'}, {id: 'previous_2.fiscal_year', label: 'Previous 2 fiscal years'}, {id: 'previous_before.fiscal_year', label: 'Fiscal year prior to previous fiscal year'}], default_date_type: 'fixed', input_attrs: {}, label: 'F\u00f8dt'}" />
+      <af-field name="gender_id" defn="{required: true, input_attrs: {}, label: 'K\u00f8n'}" />
+    </div>
+    <div af-join="Address">
+      <div class="af-container">
+        <af-field name="street_address" defn="{label: 'Adresse', input_attrs: {}}" />
+        <af-field name="supplemental_address_1" defn="{label: 'Adresse 2', input_attrs: {}}" />
+      </div>
+      <div class="af-container af-layout-inline">
+        <af-field name="postal_code" defn="{label: 'Postnummer', input_attrs: {}}" />
+        <af-field name="city" defn="{label: 'By', input_attrs: {}}" />
+      </div>
+    </div>
+    <div af-join="Phone">
+      <div class="af-container af-layout-inline">
+        <af-field name="phone" defn="{label: 'Mobil', input_attrs: {}}" />
+      </div>
+    </div>
+  </fieldset>
+  <fieldset af-fieldset="Organization1" class="af-container" af-title="B&aring;d">
+    <div class="af-container">
+      <div class="af-container af-layout-inline">
+        <af-field name="organization_name" defn="{label: 'Navn', input_attrs: {}}" />
+        <af-field name="B_d_data.B_dtype" defn="{label: 'B\u00e5dtype', input_attrs: {}}" />
+      </div>
+    </div>
+    <div class="af-container af-layout-inline">
+      <af-field name="B_d_data.L_ngde" />
+      <af-field name="B_d_data.Bredde" />
+      <af-field name="B_d_data.Dybgang" />
+      <af-field name="B_d_data.V_gt" />
+    </div>
+    <div class="af-container af-layout-inline">
+      <af-field name="B_d_data.Forsikringsselskab" defn="{label: 'Forsikringsselskab', input_attrs: {}}" />
+      <af-field name="B_d_data.Policenummer" defn="{label: 'Policenummer', input_attrs: {}}" />
+    </div>
+    <div class="af-container af-layout-inline">
+      <af-field name="B_d_data.Sejl_Nummer" defn="{label: 'Sejl Nummer', input_attrs: {}}" />
+      <af-field name="B_d_data.Kaldesignal" />
+      <af-field name="B_d_data.Mmsi" />
+    </div>
+  </fieldset>
+  <button class="af-button btn btn-primary" crm-icon="fa-check" ng-click="afform.submit()" ng-if="afform.showSubmitButton">Submit</button>
+</af-form>
