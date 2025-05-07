@@ -13,7 +13,7 @@
 {foreach from=$participants key=id item=participant}
   <tr>
     <td>
-      <input type="radio" id="deltager_{$id}" name="part_status_{$id}" >
+      <input type="radio" id="deltager_{$id}" name="part_status_{$id}" value="" >
     </td>
     <td>
       <input type="radio" id="afbud_{$id}" name="part_status_{$id}" >
@@ -40,6 +40,7 @@
 {literal}
   <script type="text/javascript">
     CRM.$(function ($) {
+      
     });
   </script>
 {/literal}

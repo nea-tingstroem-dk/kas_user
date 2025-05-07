@@ -41,7 +41,12 @@ class CRM_KasUser_Form_SailingMenu extends CRM_Core_Form {
     $participants = [];
 
     $parts = \Civi\Api4\Participant::get(TRUE)
-      ->addSelect('contact_id.external_identifier', 'role_id', 'contact_id.display_name', 'contact_id')
+      ->addSelect('contact_id.external_identifier', 
+        'role_id', 
+        'contact_id.display_name', 
+        'contact_id', 
+        'status_id', 
+        'status_id:label')
       ->addWhere('event_id', '=', $this->_eventId)
       ->execute();
     foreach ($parts as $part) {
@@ -58,7 +63,7 @@ class CRM_KasUser_Form_SailingMenu extends CRM_Core_Form {
         $participants[$contactId] = [
           'konto' => $part['contact_id.external_identifier'],
           'name' => $part['contact_id.display_name'],
-          ];
+        ];
       }
     }
 
