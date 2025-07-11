@@ -6,4 +6,11 @@
     <title>SailingMenu</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/kas-user/search</path>
+    <page_callback>CRM_KasUser_Page_SearchPage</page_callback>
+    <title>SearchPage</title>
+    <access_callback>1</access_callback>
+    <is_public>true</is_public>
+  </item>
 </menu>
