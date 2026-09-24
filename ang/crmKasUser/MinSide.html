@@ -29,7 +29,7 @@
                   <td>
                     <input 
                       crm-autocomplete="'Contact'" 
-                      crm-autocomplete-params="{savedSearch: 'K_A_S_Medlemmer'
+                      crm-autocomplete-params="{savedSearch: 'K_A_S_Medlemmer'}"
                       class="form-control"
                       id="contactId"
                       name="contactId"
@@ -111,30 +111,6 @@
               <th width="auto" />
               </thead>
               <tbody>
-                <tr>
-                  <td>
-                    <label for="addressInput" class="control-label">{{ts('Address')}}</label>
-
-                  </td>
-                  <td>
-                    <input 
-                      type="text" 
-                      ng-bind="addressInput" 
-                      class="form-control huge big"
-                      id="addressInput"
-                      name="addressInput"
-                      ng-required="false"
-                      list="addressInputList"
-                      ng-model="addressInput"
-                      ng-change="addressInputChange()"
-                      data-caret-aware="cursor"
-                      />
-                    <datalist id="addressInputList">
-                      <option ng-repeat="row in addressSuggest" value="{{row.value}}" >{{row.forslag}}</option>
-                    </datalist>
-
-                  </td>
-                <tr>
                   <td>
                     <label class="control-label">{{ts('Addresse')}}</label>
                   </td>
@@ -204,7 +180,7 @@
       </div>
     </div>
 
-    <div id="my_data" class="ng-hide" ng-hide="hideEventTeamTab">
+    <div id="my_data" class="ng-hide" ng-hide="hideMyData">
       <div class="crm-flex-box">
         <div class="crm-flex-2 crm-dashboard-droppable ng-not-empty" >
           <div class="crm-dashlet ng-scope">
