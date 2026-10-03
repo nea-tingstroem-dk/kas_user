@@ -32,7 +32,43 @@ function kas_user_civicrm_enable(): void {
   _kas_user_civix_civicrm_enable();
 }
 
-// --- Functions below this ship commented out. Uncomment as required. ---
+
+/**
+ * Implements hook_civicrm_searchTasks().
+ *
+ * Adds "Print business cards" to the Actions menu of contact searches.
+ */
+function kas_user_civicrm_searchTasks($objectName, &$tasks) {
+  if ($objectName !== 'contact') {
+    return;
+  }
+  $tasks['kas_user_print'] = [
+    'title' => ts('Print business cards', ['domain' => 'kas_user']),
+    'class' => 'CRM_KasUser_Form_Task_PrintCards',
+    'result' => FALSE,
+  ];
+}
+
+/**
+ * Implements hook_civicrm_summaryActions().
+ *
+ * Adds "Business cards (PDF)" to the Actions menu on a contact's summary page.
+ */
+function kas_user_civicrm_summaryActions(&$actions, $contactID) {
+  if (!$contactID) {
+    return;
+  }
+  $actions['otherActions']['kas_user'] = [
+    'title' => ts('Business cards (PDF)', ['domain' => 'kas_user']),
+    'description' => ts('Download business cards for this contact', ['domain' => 'kas_user']),
+    'weight' => 60,
+    'ref' => 'crm-contact-kas_user',
+    'key' => 'kas_user',
+    'class' => 'no-popup',
+    'href' => CRM_Utils_System::url('civicrm/business-card', ['cid' => (int) $contactID, 'reset' => 1]),
+    'icon' => 'crm-i fa-id-card-o',
+  ];
+}
 
 /**
  * Implements hook_civicrm_preProcess().

@@ -1,25 +1,24 @@
 <div class="crm-container">
-  <div crm-ui-debug="contact"></div>
+  <div crm-ui-debug="myContact"></div>
 
   <h1 crm-page-title>{{ts('K.A.S. Min side')}}</h1>
 
   <div class="ui-tabs ui-corner-all ui-widget ui-widget-content">
-
     <div class="ui-tabs ui-corner-all ui-widget ui-widget-content">
-      <button class="crm-tab-button" ng-click="selectTab('primary')">{{ts('Medlemmer')}}</button>
       <button class="crm-tab-button" ng-click="selectTab('my_data')">{{ts('Mine oplysninger')}}</button>
+      <button class="crm-tab-button" ng-click="selectTab('search_tab')">{{ts('Medlemmer')}}</button>
     </div>
-    <div id="primary_tab" class="ng-hide" ng-hide="hidePrimaryTab">
+    <div id="search_tab" class="ng-hide" ng-hide="visibleTab!='search_tab'">
       <div class="crm-flex-2 crm-dashboard-droppable ng-not-empty ng-hide" ng-show="!contact">
         <div class="crm-dashlet ng-scope">
           <div class="section crmkas-contact-area">
             <div class="label bold">
-              <h3>{{ts('Medlemmer')}}</h3>
+              <h3>{{ts('Søg')}}</h3>
             </div>
             <table>
               <thead>
-              <th width="15%" />
-              <th width="auto" />
+              <th style="width:15%" />
+              <th style="width: auto" />
               </thead>
               <tbody>
                 <tr>
@@ -28,25 +27,17 @@
                   </td>
                   <td>
                     <input 
-                      crm-autocomplete="'Contact'" 
-                      crm-autocomplete-params="{savedSearch: 'K_A_S_Medlemmer'}"
-                      class="form-control"
-                      id="contactId"
-                      name="contactId"
-                      ng-model="contactId"
-                      ng-required="false"
-                      ng-change="contactSelected()"
-                      />
-<!--                    <input
-                      crm-entityref="{entity: 'Contact', api: {params: {}}, select: {allowClear:true, minimumInputLength: 1}}"
-                      class="form-control"
-                      id="contactId"
-                      name="contactId"
-                      ng-model="contactId"
-                      ng-required="false"
-                      ng-change="contactSelected()"
-                      />-->
-                  </td>
+                        crm-autocomplete="'Contact'" 
+                        crm-autocomplete-params="{savedSearch: 'K_A_S_Medlemmer'}"
+                        class="form-control huge big"
+                        id="contactId"
+                        name="contactId"
+                        placeholder="&nbsp;"
+                        ng-model="contactId"
+                        ng-required="false"
+                        ng-change="contactSelected()"
+                        />
+                 </td>
                 </tr>  
                 <tr>
                   <td>
@@ -54,17 +45,17 @@
                   </td>
                   <td>
                     <input 
-                      type="text" 
-                      ng-bind="extId" 
-                      class="form-control huge big"
-                      id="extIdInput"
-                      name="extIdInput"
-                      ng-required="false"
-                      list="extIdInputList"
-                      ng-model="extIdInput"
-                      ng-change="extIdInputChange()"
-                      data-caret-aware="cursor"
-                      />
+                        type="text" 
+                        ng-bind="extId" 
+                        class="form-control huge big"
+                        id="extIdInput"
+                        name="extIdInput"
+                        ng-required="false"
+                        list="extIdInputList"
+                        ng-model="extIdInput"
+                        ng-change="extIdInputChange()"
+                        data-caret-aware="cursor"
+                        />
                     <datalist id="extIdInputList">
                       <option ng-repeat="row in extIdSuggest" value="{{row.external_identifier}}" >{{row.external_identifier}}&nbsp;{{row.display_name}}</option>
                     </datalist>
@@ -77,16 +68,16 @@
                   </td>
                   <td>
                     <input 
-                      type="text" 
-                      class="form-control huge big"
-                      id="boatInput"
-                      name="boatInput"
-                      ng-required="false"
-                      list="boatInputList"
-                      ng-model="boatInput"
-                      ng-change="boatInputChange()"
-                      data-caret-aware="cursor"
-                      />
+                        type="text" 
+                        class="form-control huge big"
+                        id="boatInput"
+                        name="boatInput"
+                        ng-required="false"
+                        list="boatInputList"
+                        ng-model="boatInput"
+                        ng-change="boatInputChange()"
+                        data-caret-aware="cursor"
+                        />
                     <datalist id="boatInputList">
                       <option ng-repeat="row in boatSuggest" value="{{row.display_name}}|{{row['contact.id']}}" >{{row.display_name}}&nbsp;{{row['contact.display_name']}}</option>
                     </datalist>
@@ -111,46 +102,46 @@
               <th width="auto" />
               </thead>
               <tbody>
-                  <td>
-                    <label class="control-label">{{ts('Addresse')}}</label>
-                  </td>
-                  <td>
-                    <div>{{contact['address_primary.street_address']}}<br></div>
-                    <div class="ng-hide" ng-show="contact['address_primary.supplemental_address_1']" >{{contact['address_primary.supplemental_address_1']}}<br></div>
-                    <div>{{contact['address_primary.postal_code']}}&nbsp;-&nbsp;{{contact['address_primary.city']}}</div>
-                  </td>
-                </tr>  
-                <tr>
-                  <td>
-                    <label class="control-label">{{ts('Email')}}</label>
-                  </td>
-                  <td>
-                    <div>{{contact['email_primary.email']}}</div>
-                  </td>
-                </tr>  
-                <tr>
-                  <td>
-                    <label for="contactId" class="control-label">{{ts('Mobil')}}</label>
-                  </td>
-                  <td>
-                    <div>{{contact['phone_primary.phone']}}</div>
-                  </td>
-                </tr>  
-                <tr class="ng-hide" ng-show="samboId">
-                  <td>
-                    <label class="control-label">{{ts('Sambo')}}</label>
-                  </td>
-                  <td>
-                    <span>{{samboName}}
-                      <a class="crm-hover-button" 
-                         ng-click="switchTo(samboId)"
-                         title="{{ts('Skift til')}}" style="visibility: visible;">
-                        <i class="crm-i fa-address-card" aria-hidden="true">
-                        </i>
-                      </a>                          
-                    </span>
-                  </td>
-                </tr>  
+              <td>
+                <label class="control-label">{{ts('Addresse')}}</label>
+              </td>
+              <td>
+                <div>{{contact['address_primary.street_address']}}<br></div>
+                <div class="ng-hide" ng-show="contact['address_primary.supplemental_address_1']" >{{contact['address_primary.supplemental_address_1']}}<br></div>
+                <div>{{contact['address_primary.postal_code']}}&nbsp;-&nbsp;{{contact['address_primary.city']}}</div>
+              </td>
+              </tr>  
+              <tr>
+                <td>
+                  <label class="control-label">{{ts('Email:')}}</label>
+                </td>
+                <td>
+                  <a href="mailto:{{contact['email_primary.email']}}">{{contact['email_primary.email']}}</a>
+                </td>
+              </tr>  
+              <tr>
+                <td>
+                  <label for="contactId" class="control-label">{{ts('Mobil')}}</label>
+                </td>
+                <td>
+                  <a href="tel:{{contact['phone_primary.phone']}}">{{contact['phone_primary.phone']}}</a>
+                </td>
+              </tr>  
+              <tr class="ng-hide" ng-show="samboId">
+                <td>
+                  <label class="control-label">{{ts('Sambo')}}</label>
+                </td>
+                <td>
+                  <span>{{samboName}}
+                    <a class="crm-hover-button" 
+                       ng-click="switchTo(samboId)"
+                       title="{{ts('Skift til')}}" style="visibility: visible;">
+                      <i class="crm-i fa-address-card" aria-hidden="true">
+                      </i>
+                    </a>                          
+                  </span>
+                </td>
+              </tr>  
               </tbody>
             </table>
           </div>
@@ -162,9 +153,9 @@
           <div class="crm-accordion-body">
             <table >
               <thead>
-              <th width="15%" />
-              <th width="auto" />
-              </thead>
+            <th style="width:15%" />
+              <th style="width: auto" />
+                </thead>
               <tbody>
                 <tr ng-repeat="(nm,val) in boat">
                   <td>
@@ -180,10 +171,63 @@
       </div>
     </div>
 
-    <div id="my_data" class="ng-hide" ng-hide="hideMyData">
+    <div id="my_data" class="ng-hide" ng-hide="visibleTab!='my_data'">
       <div class="crm-flex-box">
         <div class="crm-flex-2 crm-dashboard-droppable ng-not-empty" >
           <div class="crm-dashlet ng-scope">
+            <div class="section crmkas-contact-area">
+              <div class="label bold">
+                <h3>{{ts('Mine oplysninger')}}</h3>
+              </div>
+            <table >
+              <thead>
+            <th style="width:15%" />
+              <th style="width: auto" />
+                </thead>
+              <tbody>
+              <td>
+                <label class="control-label">{{ts('Addresse')}}</label>
+              </td>
+              <td>
+                <div>{{myContact['address_primary.street_address']}}<br></div>
+                <div class="ng-hide" ng-show="myContact['address_primary.supplemental_address_1']" >{{myContact['address_primary.supplemental_address_1']}}<br></div>
+                <div>{{myContact['address_primary.postal_code']}}&nbsp;-&nbsp;{{myContact['address_primary.city']}}</div>
+              </td>
+              </tr>  
+              <tr>
+                <td>
+                  <label class="control-label">{{ts('Email:')}}</label>
+                </td>
+                <td>
+                  <a href="mailto:{{myContact['email_primary.email']}}">{{myContact['email_primary.email']}}</a>
+                </td>
+              </tr>  
+              <tr>
+                <td>
+                  <label for="myContactId" class="control-label">{{ts('Mobil')}}</label>
+                </td>
+                <td>
+                  <a href="tel:{{myContact['phone_primary.phone']}}">{{myContact['phone_primary.phone']}}</a>
+                </td>
+              </tr>  
+              <tr class="ng-hide" ng-show="samboId">
+                <td>
+                  <label class="control-label">{{ts('Sambo')}}</label>
+                </td>
+                <td>
+                  <span>{{samboName}}
+                    <a class="crm-hover-button" 
+                       ng-click="switchTo(samboId)"
+                       title="{{ts('Skift til')}}" style="visibility: visible;">
+                      <i class="crm-i fa-address-card" aria-hidden="true">
+                      </i>
+                    </a>                          
+                  </span>
+                </td>
+              </tr>  
+              </tbody>
+            </table>
+            </div>
           </div>
         </div>
       </div>

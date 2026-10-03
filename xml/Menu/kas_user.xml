@@ -13,4 +13,17 @@
     <access_callback>1</access_callback>
     <is_public>true</is_public>
   </item>
+  <item>
+    <path>civicrm/min-side</path>
+    <page_callback>CRM_KasUser_Page_MyPage</page_callback>
+    <title>MyPage</title>
+    <access_callback>1</access_callback>
+    <is_public>true</is_public>
+  </item>
+  <item>
+    <path>civicrm/business-card</path>
+    <page_callback>CRM_KasUser_Page_Print</page_callback>
+    <title>Business cards</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>

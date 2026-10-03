@@ -11,8 +11,14 @@
               resolve: {
                   myContact: function (crmApi) {
                       return crmApi('Contact', 'getsingle', {
-                          id: 'user_contact_id'
-//              return: ['first_name', 'last_name', 'external_identifier']
+                          id: 'user_contact_id',
+              return: ["external_identifier", 
+                        "first_name",
+                        "last_name",
+                        "display_name", 
+                        "address_primary.*", 
+                        "email_primary.email", 
+                        "phone_primary.phone"]
                       });
                   }
               }
@@ -32,10 +38,9 @@
             // Local variable for this controller (needed when inside a callback fn where `this` is not available).
             var ctrl = this;
             // We have myContact available in JS. We also want to reference it in HTML.
-            this.myContact = myContact;
+            $scope.myContact = myContact;
             var inputEl = angular.element(document.querySelector('#addressInput'));
-            $scope.hidePrimaryTab = false;
-            $scope.hideMyTab = true;
+            $scope.visibleTab = "my_data";
             $scope.contactId = null;
             $scope.contact = null;
             $scope.samboId = null;
@@ -60,18 +65,9 @@
             $scope.masterParticipantsHeaders = [];
             $scope.masterParticipants = null;
             $scope.masterParticipantsChecked = new Map();
-            function hideTabs() {
-                $scope.hidePrimaryTab = true;
-                $scope.hideMyTab = true;
-            }
-
+            
             $scope.selectTab = function (tab) {
-                hideTabs();
-                if (tab == 'primary') {
-                    $scope.hidePrimaryTab = false;
-                } else if (tab == 'my_data') {
-                    $scope.hideMyData = false;
-                }
+                $scope.visibleTab = tab;
             };
             $scope.clearSearch = function () {
                 $scope.contact = null;
