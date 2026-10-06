@@ -29,14 +29,14 @@ class CRM_KasUser_CardData {
       return [];
     }
 
-    $contacts = Contact::get(TRUE)
+    $contacts = Contact::get(FALSE)
       ->addSelect(
-        'id', 'contact_type', 'display_name', 'job_title',
-        'employer_id', 'employer_id.display_name', 'employer_id.image_URL',
+        'id', 'external_identifier', 'contact_type', 'display_name',
         'email_primary.email', 'phone_primary.phone',
         'address_primary.street_address', 'address_primary.supplemental_address_1',
-        'address_primary.postal_code', 'address_primary.city'
-      )
+        'address_primary.postal_code', 'address_primary.city',
+        'boat.display_name')
+      ->addJoin('Contact AS boat', 'LEFT', 'RelationshipCache', ['boat.far_relation', '=', '"Bådejer af"'])
       ->addWhere('id', 'IN', $ids)
       ->addWhere('is_deleted', '=', FALSE)
       ->addOrderBy('sort_name')
@@ -58,7 +58,8 @@ class CRM_KasUser_CardData {
     foreach ($contacts as $c) {
       $address = '';
       if (!empty($options['show_address'])) {
-        $street = implode(', ', array_filter([$c['address_primary.street_address'] ?? '', $c['address_primary.supplemental_address_1'] ?? '']));
+        $street = implode(', ', array_filter([$c['address_primary.street_address'] ?? '',
+          $c['address_primary.supplemental_address_1'] ?? '']));
         $town = trim(($c['address_primary.postal_code'] ?? '') . ' ' . ($c['address_primary.city'] ?? ''));
         $address = implode(', ', array_filter([$street, $town]));
       }
@@ -71,18 +72,55 @@ class CRM_KasUser_CardData {
 
       $card = [
         'name' => (string) $c['display_name'],
-        'job_title' => (string) ($c['job_title'] ?? ''),
-        'organization' => $c['contact_type'] === 'Individual' ? (string) ($c['employer_id.display_name'] ?? '') : '',
+        'boat_name' => $c['boat.display_name'],
+        'external_identifier' => (string) ($c['external_identifier'] ?? ''),
         'phone' => (string) ($c['phone_primary.phone'] ?? ''),
         'email' => (string) ($c['email_primary.email'] ?? ''),
-        'website' => (string) ($websites[$c['id']] ?? ($options['website'] ?? '')),
         'address' => $address,
         'logo' => $logo['uri'] ?? NULL,
         'logo_w' => $logo['w'] ?? 0,
         'logo_h' => $logo['h'] ?? 0,
-        'qr' => CRM_KasUser_Options::qrUrl((string) ($options['qr_target'] ?? 'none'), (string) ($options['qr_url'] ?? ''), (int) $c['id']),
+        'qr' => CRM_KasUser_Options::qrUrl((string) ($options['qr_target'] ?? 'none'), (string) ($options['qr_url'] ?? ''), $c),
       ];
-      $cards[] = $card;
+      switch ((int) $options['profile']) {
+        case 1: // Mastebrik
+          break;
+        case 2: // Medlemskort
+          if (empty($card['external_identifier'])) {
+            $card['info'] = "IKKE MEDLEM";
+          } else {
+            $economicCustomer = \Civi\Api4\EconomicCustomer::get(FALSE)
+                ->addWhere('customerNumber', '=', ($c['external_identifier']))
+                ->setLimit(1)
+                ->execute()
+                ->first() ?? null;
+            if ($economicCustomer) {
+              $isMember = \Civi\Api4\GroupContact::get(FALSE)
+                  ->addWhere('contact_id', '=', $c['id'])
+                  ->addWhere('group_id:name', '=', 'KasMedlemmer_2')
+                  ->addWhere('status', '=', 'Added')
+                  ->execute()
+                  ->count() > 0;
+              if (!$isMember) {
+                $card['info'] = "IKKE MEDLEM";
+              } else {
+                $periode = self::halfYear();
+                if ($economicCustomer['dueAmount'] <= 0.0 or $periode['dage'] < 14) {
+                  $card['info'] = $periode['start']->format('Y-m-d') . ' til ' . $periode['slut']->format('Y-m-d');
+                } else {
+                  $card['info'] = "Ubetalt udestående";
+                }
+              }
+            }
+          }
+          break;
+        case 3: // Parkering
+          break;
+        case 4: // Tilhører
+          break;
+      }
+
+      $cards[] = array_merge($options, $card);
     }
     return $cards;
   }
@@ -120,7 +158,7 @@ class CRM_KasUser_CardData {
     $query = parse_url(html_entity_decode($imageUrl), PHP_URL_QUERY);
     parse_str((string) $query, $params);
     if (empty($params['photo'])) {
-      // External image (e.g. a gravatar) – not embedded.
+// External image (e.g. a gravatar) – not embedded.
       return NULL;
     }
     $dir = CRM_Core_Config::singleton()->customFileUploadDir;
@@ -135,8 +173,8 @@ class CRM_KasUser_CardData {
     [$w, $h] = $info;
     $bytes = (string) file_get_contents($path);
 
-    // With GD: scale down and flatten onto white as a plain RGB PNG, which
-    // keeps logos sharp and avoids dompdf's own GD needs for transparency.
+// With GD: scale down and flatten onto white as a plain RGB PNG, which
+// keeps logos sharp and avoids dompdf's own GD needs for transparency.
     if (function_exists('imagecreatefromstring') && ($src = @imagecreatefromstring($bytes))) {
       $newW = min($w, self::LOGO_WIDTH);
       $newH = (int) max(1, round($h * $newW / $w));
@@ -151,7 +189,7 @@ class CRM_KasUser_CardData {
       return ['uri' => 'data:image/png;base64,' . base64_encode($png), 'w' => $newW, 'h' => $newH];
     }
 
-    // Without GD: JPEG, or PNG without an alpha channel / transparency chunk.
+// Without GD: JPEG, or PNG without an alpha channel / transparency chunk.
     if ($info[2] === IMAGETYPE_JPEG) {
       return ['uri' => 'data:image/jpeg;base64,' . base64_encode($bytes), 'w' => $w, 'h' => $h];
     }
@@ -161,4 +199,27 @@ class CRM_KasUser_CardData {
     return NULL;
   }
 
+  private static function halfYear(?DateTimeImmutable $dato = null): array {
+    $dato = $dato ?? new DateTimeImmutable('today');
+    $aar = (int) $dato->format('Y');
+    $maaned = (int) $dato->format('n');
+
+    if ($maaned >= 4 && $maaned <= 9) {
+// 1. april – 30. september samme år
+      $start = new DateTimeImmutable("$aar-04-01");
+      $slut = new DateTimeImmutable("$aar-09-30");
+    } elseif ($maaned >= 10) {
+// 1. oktober i år – 31. marts næste år
+      $start = new DateTimeImmutable("$aar-10-01");
+      $slut = new DateTimeImmutable(($aar + 1) . "-03-31");
+    } else {
+// januar–marts: 1. oktober sidste år – 31. marts i år
+      $start = new DateTimeImmutable(($aar - 1) . "-10-01");
+      $slut = new DateTimeImmutable("$aar-03-31");
+    }
+
+    $dageFraStart = $start->diff($dato)->days;
+
+    return ['start' => $start, 'slut' => $slut, 'dage' => $dageFraStart];
+  }
 }

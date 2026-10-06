@@ -19,23 +19,30 @@ class CRM_KasUser_CardRenderer {
 
   /** Left margin inside the card (mm). */
   private const PAD = 5.0;
+
   /** QR code position and size (mm). */
   private const QR_X = 62.0;
-  private const QR_Y = 27.0;
+  private const QR_Y = 5.5;
   private const QR_SIZE = 18.0;
+
   /** dompdf spaces lines at ~1.45 × font size (measured), whatever line-height says. */
   private const LINE = 1.45 * 0.3528;
 
   /** @var string a4|single */
   private $layout = 'a4';
+
   /** @var string */
   private $accent = '#1f4e79';
+
   /** @var int */
   private $skip = 0;
+
   /** @var string */
   private $orgName = '';
+
   /** @var string */
   private $qrCaption = '';
+
   /** @var array cache of QR data URIs by text */
   private $qrCache = [];
 
@@ -104,41 +111,63 @@ class CRM_KasUser_CardRenderer {
       [$w, $lh] = self::fit((int) $c['logo_w'], (int) $c['logo_h'], 34, 12);
       $h .= '<img class="logo" src="' . self::e($c['logo']) . '" style="width:' . self::mm($w) . ';height:' . self::mm($lh)
         . ';top:' . self::mm(5.5 + (12 - $lh) / 2) . '">';
-    }
-    elseif ($this->orgName !== '') {
+    } elseif ($this->orgName !== '') {
       $size = self::fitFont($this->orgName, 74, [10, 9, 8, 7], 0.25);
       $h .= self::text($this->orgName, self::PAD, 8, 74, $size, 'bold', $this->accent);
     }
-
+    // QR code.
+    if ($hasQr) {
+      $uri = $this->qrUri((string) $c['qr']);
+      $h .= '<a href="' . $uri . '">';
+      $h .= '<img class="qr" src="' . $uri . '" style="top:' . self::mm(5.5 + (12 - $lh) / 2) . '">';
+      $h .= '</a>';
+      if ($this->qrCaption !== '') {
+        $capSize = self::fitFont($this->qrCaption, 22, [4.6, 4.2, 3.8], 0.2);
+        $h .= '<div class="qrcap" style="font-size:' . $capSize . 'pt;color:' . '">' .
+          self::e($this->qrCaption) . '</div>';
+      }
+    }
     // Name, job title, organisation.
     $y = 20.5;
-    $name = (string) ($c['name'] ?? '');
-    $nameSize = self::fitFont($name, $textW, [11.5, 10.5, 9.5, 8.5, 7.5], 0.225, 0);
-    $nameLines = 1;
-    if (!$nameSize) {
-      $nameSize = 7.5;
-      $nameLines = 2;
+    $sizeValues = [11.5, 10.5, 9.5, 8.5, 7.5];
+    $title = (string) ($c['card_title'] ?? '');
+    $titleSize = self::fitFont($title, $textW, $sizeValues, 0.225, 0);
+
+    $h .= self::text($title, self::PAD, $y, $textW, $titleSize, 'bold', '#101828', FALSE);
+    $y += $titleSize * self::LINE + 0.4;
+
+    if ((int) $c['profile'] === 1) {
+      $boat = (string) ($c['boat_name'] ?? '');
+      if (!empty($boat)) {
+        $boatSize = self::fitFont($boat, $textW, $sizeValues, 0.225, 0);
+        $h .= self::text($boat, self::PAD, $y, $textW, $boatSize, 'bold', '#101828');
+        $y += $boatSize * self::LINE + 0.4;
+        $sizeValues = [9.5, 8.5, 7.5];
+      }
     }
+    $info = (string) ($c['info'] ?? '');
+    if (!empty($info)) {
+      $infoSize = self::fitFont($info, $textW, [6.0, 5.5, 5.0], 0.225, 0);
+      $h .= self::text($info, self::PAD, $y, $textW, $infoSize, 'bold', '#101828', $nameLines === 1);
+      $y += $infoSize * self::LINE + 0.4;
+    }
+
+    $nameLines = 1;
+    $name = (string) ($c['name'] ?? '') . ' - ' . (string) ($c['external_identifier']);
+    $nameSize = self::fitFont($name, $textW, $sizeValues, 0.225, 0);
     $h .= self::text($name, self::PAD, $y, $textW, $nameSize, 'bold', '#101828', $nameLines === 1);
     $y += $nameLines * $nameSize * self::LINE + 0.4;
 
-    foreach ([['job_title', 7.2, 'bold', $this->accent], ['organization', 6.6, 'normal', '#475467']] as [$key, $max, $weight, $colour]) {
-      $value = trim((string) ($c[$key] ?? ''));
-      if ($value === '') {
-        continue;
-      }
-      $size = self::fitFont($value, $textW, [$max, $max - 0.8, $max - 1.6], $weight === 'bold' ? 0.24 : 0.21);
-      $h .= self::text($value, self::PAD, $y, $textW, $size, $weight, $colour);
-      $y += $size * self::LINE;
-    }
+
+
 
     // Contact lines along the bottom, dropping the last ones if space runs out.
     $lines = [];
     foreach ([
-      'phone' => self::t('T'),
-      'email' => self::t('E'),
-      'website' => self::t('W'),
-      'address' => self::t('A'),
+    'phone' => self::t('T'),
+    'email' => self::t('E'),
+    'website' => self::t('W'),
+    'address' => self::t('A'),
     ] as $key => $label) {
       $value = trim((string) ($c[$key] ?? ''));
       if ($value !== '') {
@@ -158,14 +187,6 @@ class CRM_KasUser_CardRenderer {
       $h .= self::text($value, self::PAD + 3.6, $ly, $textW - 3.6, $size, 'normal', '#344054');
     }
 
-    // QR code.
-    if ($hasQr) {
-      $h .= '<img class="qr" src="' . $this->qrUri((string) $c['qr']) . '">';
-      if ($this->qrCaption !== '') {
-        $capSize = self::fitFont($this->qrCaption, 22, [4.6, 4.2, 3.8], 0.2);
-        $h .= '<div class="qrcap" style="font-size:' . $capSize . 'pt;color:' . $this->accent . '">' . self::e($this->qrCaption) . '</div>';
-      }
-    }
 
     return $h . '</div>';
   }
@@ -244,5 +265,4 @@ CSS;
   private static function t(string $s): string {
     return function_exists('ts') ? ts($s, ['domain' => 'kas_user']) : $s;
   }
-
 }

@@ -1,9 +1,9 @@
 <div class="crm-block crm-form-block crm-businesscards-form-block">
-  <div class="help">
-    {ts domain="businesscards" 1=$contactCount}%1 contact(s) selected. Cards show each contact's name, job title, employer, primary phone, email and address, and their website (or the one entered below). Your choices are remembered for next time.{/ts}
-  </div>
-
   <table class="form-layout-compressed">
+    <tr>
+      <td class="label">{$form.profile.label}</td>
+      <td>{$form.profile.html}</td>
+    </tr>
     <tr>
       <td class="label">{$form.layout.label}</td>
       <td>{$form.layout.html}</td>
@@ -34,6 +34,12 @@
       <td>
         {$form.qr_target.html}
         <div class="description">{ts domain="businesscards"}Pick a public Form Builder form or profile, or enter any web address. Profiles must allow anonymous users to create contacts.{/ts}</div>
+      </td>
+    </tr>
+    <tr class="businesscards-title">
+      <td class="label">{$form.card_title.label}</td>
+      <td>
+        {$form.card_title.html}
       </td>
     </tr>
     <tr class="businesscards-qr-url">

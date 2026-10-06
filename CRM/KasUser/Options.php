@@ -9,11 +9,20 @@ use Civi\Api4\UFGroup;
 class CRM_KasUser_Options {
 
   private const KEYS = [
-    'layout', 'logo_source', 'qr_target', 'qr_url', 'qr_caption', 'website', 'show_address', 'accent',
+    'card_title', 'layout', 'logo_source', 'qr_target', 'qr_url', 'qr_caption', 'website', 'show_address', 'accent',
   ];
 
-  public static function load(): array {
+  public static function load($profile = null): array {
     $values = [];
+
+    if ($profile) {
+      $json = Civi::settings()->get('kas_user_profile_' . $profile);
+      if ($json) {
+        $values = (array) json_decode($json);
+        $values['profile'] = $profile;
+        return $values;
+      }
+    }
     foreach (self::KEYS as $key) {
       $values[$key] = Civi::settings()->get('kas_user_' . $key);
     }
@@ -25,13 +34,25 @@ class CRM_KasUser_Options {
       // Default to the first real form, if there is one.
       $values['qr_target'] = (string) (array_keys(array_diff_key($targets, ['url' => 1, 'none' => 1]))[0] ?? 'url');
     }
+
     return $values;
   }
 
-  public static function save(array $values): void {
-    foreach (self::KEYS as $key) {
-      if (array_key_exists($key, $values)) {
-        Civi::settings()->set('kas_user_' . $key, $key === 'show_address' ? !empty($values[$key]) : (string) $values[$key]);
+  public static function save(array $values, $profile = null): void {
+    if ($profile) {
+      $toSave = [];
+      foreach (self::KEYS as $key) {
+        if (array_key_exists($key, $values)) {
+          $toSave[$key] = ($key === 'show_address' ? !empty($values[$key]) : (string) $values[$key]);
+        }
+      }
+      $json = json_encode($toSave);
+      Civi::settings()->set('kas_user_profile_' . $profile, $json);
+    } else {
+      foreach (self::KEYS as $key) {
+        if (array_key_exists($key, $values)) {
+          Civi::settings()->set('kas_user_' . $key, $key === 'show_address' ? !empty($values[$key]) : (string) $values[$key]);
+        }
       }
     }
   }
@@ -76,7 +97,7 @@ class CRM_KasUser_Options {
   /**
    * The web address encoded in the QR code for one contact, or NULL.
    */
-  public static function qrUrl(string $target, string $customUrl, int $contactId): ?string {
+  public static function qrUrl(string $target, string $customUrl, array $c): ?string {
     if (strpos($target, 'profile:') === 0) {
       $gid = (int) substr($target, 8);
       return CRM_Utils_System::url('civicrm/profile/create', ['gid' => $gid, 'reset' => 1], TRUE, NULL, FALSE, TRUE);
@@ -93,7 +114,11 @@ class CRM_KasUser_Options {
       return NULL;
     }
     if ($target === 'url' && self::isWebAddress($customUrl)) {
-      return str_replace('{contact_id}', (string) $contactId, trim($customUrl));
+      $result = trim($customUrl);
+      foreach ($c as $key => $value) {
+        $result = str_replace('{' . $key . '}', (string) $value, $result);
+      }
+      return $result;
     }
     return NULL;
   }
@@ -103,8 +128,6 @@ class CRM_KasUser_Options {
   }
 
   private static function afformActive(): bool {
-    return class_exists('\Civi\Api4\Afform')
-      && CRM_Extension_System::singleton()->getMapper()->isActiveModule('afform');
+    return class_exists('\Civi\Api4\Afform') && CRM_Extension_System::singleton()->getMapper()->isActiveModule('afform');
   }
-
 }

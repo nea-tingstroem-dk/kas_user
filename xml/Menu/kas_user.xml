@@ -21,9 +21,16 @@
     <is_public>true</is_public>
   </item>
   <item>
-    <path>civicrm/business-card</path>
+    <path>civicrm/kas/brikker</path>
     <page_callback>CRM_KasUser_Page_Print</page_callback>
-    <title>Business cards</title>
+    <title>Brikker</title>
+    <access_callback>1</access_callback>
+    <is_public>true</is_public>
+  </item>
+  <item>
+    <path>civicrm/kas/brik-config</path>
+    <page_callback>CRM_KasUser_Form_Task_PrintCards</page_callback>
+    <title>Konfigurer brikker</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>

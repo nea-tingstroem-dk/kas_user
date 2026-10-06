@@ -10,9 +10,30 @@
 class CRM_KasUser_Page_Print extends CRM_Core_Page {
 
   public function run() {
-    $cid = (int) CRM_Utils_Request::retrieveValue('cid', 'Positive', 0, TRUE, 'GET');
-    $options = CRM_KasUser_Options::load();
+    $cid = (int) CRM_Utils_Request::retrieveValue('cid', 'Positive', 0, FALSE, 'GET');
+    if (!$cid) {
+      $cid = (int) CRM_Core_Session::singleton()->getLoggedInContactID();
+    }
+    $profileList = CRM_Core_OptionGroup::values('briktyper');
+    $profile = (int) CRM_Utils_Request::retrieveValue('profile', 'Positive', 0, FALSE, 'GET');
+    $options = CRM_KasUser_Options::load($profile);
     $copies = ($options['layout'] ?? 'a4') === 'single' ? 1 : 10;
+    foreach ([
+      'copies' => 'Positive',
+      'layout' => 'String'] as $key => $type) {
+      $val = CRM_Utils_Request::retrieveValue($key, $type);
+      if ($val) {
+        switch ($key) {
+          case 'copies':
+            $copies = $val;
+            break;
+          case 'layout':
+            $options['layout'] = $val;
+            $copies = ($options['layout'] ?? 'a4') === 'single' ? 1 : 10;
+            break;
+        }
+      }
+    }
 
     $pdf = NULL;
     try {
@@ -27,7 +48,7 @@ class CRM_KasUser_Page_Print extends CRM_Core_Page {
       CRM_Core_Error::statusBounce(ts('This contact could not be found, or you do not have permission to view it.', ['domain' => 'kas_user']));
     }
 
-    $name = CRM_Utils_String::munge('business-cards-' . $cid, '-', 0);
+    $name = CRM_Utils_String::munge($profileList[$profile] . '-' . $cid, '-', 0);
     CRM_Utils_System::download($name . '.pdf', 'application/pdf', $pdf);
   }
 

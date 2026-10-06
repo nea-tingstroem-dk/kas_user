@@ -9,12 +9,20 @@
 class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
 
   public function buildQuickForm() {
-    $this->setTitle(self::ts('Print business cards'));
+    $this->setTitle(self::ts('Konfigurer brik-print'));
 
+    $this->add('select', 'profile', ts('Profile'),
+      CRM_Core_OptionGroup::values('briktyper'), FALSE,
+      [
+        'class' => 'crm-select2',
+        'placeholder' => TRUE,
+        'option_url' => CRM_Utils_System::url('civicrm/admin/options/briktyper', 'reset=1'),
+      ]
+    );
     $this->add('select', 'layout', self::ts('Layout'), [
       'a4' => self::ts('A4 sheet, 10 cards (2 × 5) – desk printer'),
       'single' => self::ts('One card per page, 85 × 55 mm – card printer'),
-    ], TRUE);
+      ], TRUE);
     $this->add('text', 'copies', self::ts('Cards per contact'), ['size' => 2, 'maxlength' => 2]);
     $this->addRule('copies', self::ts('Enter a number from 1 to 50.'), 'regex', '/^([1-9]|[1-4][0-9]|50)$/');
     $this->add('text', 'skip', self::ts('Skip positions'), ['size' => 2, 'maxlength' => 1]);
@@ -24,7 +32,8 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
       'domain' => self::ts('Your organisation\'s logo'),
       'employer' => self::ts('Each person\'s employer logo (falls back to yours)'),
       'none' => self::ts('No logo – show the organisation name'),
-    ], TRUE);
+      ], TRUE);
+    $this->add('text', 'card_title', self::ts('Card title'), ['class' => 'huge', 'placeholder' => 'Enter card title']);
 
     $this->add('select', 'qr_target', self::ts('QR code opens'), CRM_KasUser_Options::qrTargets(), TRUE, ['class' => 'crm-select2 huge']);
     $this->add('text', 'qr_url', self::ts('Web address'), ['class' => 'huge', 'placeholder' => 'https://']);
@@ -50,7 +59,9 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
   }
 
   public function setDefaultValues() {
-    $defaults = CRM_KasUser_Options::load();
+    $profile = CRM_Utils_Request::retrieve('profile', 'Integer')?? 1;
+    $defaults = CRM_KasUser_Options::load($profile);
+    $defaults['profile'] = $profile;
     $defaults['copies'] = count($this->_contactIds) === 1 && $defaults['layout'] === 'a4' ? 10 : 1;
     $defaults['skip'] = 0;
     $defaults['show_address'] = $defaults['show_address'] ? 1 : 0;
@@ -63,7 +74,11 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
   public function postProcess() {
     $values = $this->exportValues();
     $values['show_address'] = !empty($values['show_address']);
-    CRM_KasUser_Options::save($values);
+    CRM_KasUser_Options::save($values, $values['profile']);
+    if (empty($this->_contactIds)) {
+      parent::postProcess();
+      return;
+    }
 
     try {
       $pdf = self::buildPdf(
@@ -72,8 +87,7 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
         max(1, min(50, (int) ($values['copies'] ?? 1))),
         (int) ($values['skip'] ?? 0)
       );
-    }
-    catch (Throwable $e) {
+    } catch (Throwable $e) {
       Civi::log()->error('Business cards: ' . $e->getMessage(), ['exception' => $e]);
       CRM_Core_Session::setStatus($e->getMessage(), self::ts('Could not create the cards'), 'error');
       return;
@@ -109,6 +123,7 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
       'accent' => (string) ($options['accent'] ?? ''),
       'org_name' => (string) CRM_Core_BAO_Domain::getDomain()->name,
       'qr_caption' => (string) ($options['qr_caption'] ?? ''),
+      'card_title' => (string) ($options['card_title'] ?? ''),
     ]);
     return CRM_KasUser_Pdf::render($renderer->render($repeated), $layout);
   }
@@ -130,5 +145,4 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
   private static function ts(string $text): string {
     return ts($text, ['domain' => 'kas_user']);
   }
-
 }
