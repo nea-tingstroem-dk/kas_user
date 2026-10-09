@@ -129,7 +129,7 @@ class CRM_KasUser_CardRenderer {
     }
     // Name, job title, organisation.
     $y = 20.5;
-    $sizeValues = [11.5, 10.5, 9.5, 8.5, 7.5];
+    $sizeValues = [11.5, 10.5, ];
     $title = (string) ($c['card_title'] ?? '');
     $titleSize = self::fitFont($title, $textW, $sizeValues, 0.225, 0);
 
@@ -147,15 +147,15 @@ class CRM_KasUser_CardRenderer {
     }
     $info = (string) ($c['info'] ?? '');
     if (!empty($info)) {
-      $infoSize = self::fitFont($info, $textW, [6.0, 5.5, 5.0], 0.225, 0);
-      $h .= self::text($info, self::PAD, $y, $textW, $infoSize, 'bold', '#101828', $nameLines === 1);
+      $infoSize = self::fitFont($info, $textW, [8.5, 7.5, 6.0, 5.5, 5.0], 0.225, 0);
+      $h .= self::text($info, self::PAD, $y, $textW, $infoSize, 'bold', '#101828');
       $y += $infoSize * self::LINE + 0.4;
     }
 
     $nameLines = 1;
     $name = (string) ($c['name'] ?? '') . ' - ' . (string) ($c['external_identifier']);
-    $nameSize = self::fitFont($name, $textW, $sizeValues, 0.225, 0);
-    $h .= self::text($name, self::PAD, $y, $textW, $nameSize, 'bold', '#101828', $nameLines === 1);
+    $nameSize = self::fitFont($name, $textW, [9.5, 8.5, 7.5, 6.0, 5.5, 5.0], 0.225, 0);
+    $h .= self::text($name, self::PAD, $y, $textW, $nameSize, 'bold', '#101828');
     $y += $nameLines * $nameSize * self::LINE + 0.4;
 
 

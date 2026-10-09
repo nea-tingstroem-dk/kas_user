@@ -24,13 +24,18 @@
     <path>civicrm/kas/brikker</path>
     <page_callback>CRM_KasUser_Page_Print</page_callback>
     <title>Brikker</title>
-    <access_callback>1</access_callback>
-    <is_public>true</is_public>
+    <access_arguments>access CiviCRM;print own kas cards;print all kas cards</access_arguments>
   </item>
   <item>
     <path>civicrm/kas/brik-config</path>
     <page_callback>CRM_KasUser_Form_Task_PrintCards</page_callback>
     <title>Konfigurer brikker</title>
     <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/kas/parkering</path>
+    <page_callback>CRM_KasUser_Form_ParkeringsBrik</page_callback>
+    <title>Parkeringskort</title>
+    <access_arguments>access CiviCRM;print own kas cards;print all kas cards</access_arguments>
   </item>
 </menu>

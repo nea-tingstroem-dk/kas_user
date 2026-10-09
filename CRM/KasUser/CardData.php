@@ -35,7 +35,8 @@ class CRM_KasUser_CardData {
         'email_primary.email', 'phone_primary.phone',
         'address_primary.street_address', 'address_primary.supplemental_address_1',
         'address_primary.postal_code', 'address_primary.city',
-        'boat.display_name')
+        'boat.display_name',
+        'Ekstra_medlemsdata.Kontingent')
       ->addJoin('Contact AS boat', 'LEFT', 'RelationshipCache', ['boat.far_relation', '=', '"Bådejer af"'])
       ->addWhere('id', 'IN', $ids)
       ->addWhere('is_deleted', '=', FALSE)
@@ -84,37 +85,71 @@ class CRM_KasUser_CardData {
       ];
       switch ((int) $options['profile']) {
         case 1: // Mastebrik
+          $mbGroup = \Civi\Api4\Group::get(FALSE)
+            ->addSelect('id')
+            ->addWhere('name', 'LIKE', 'mastebr%')
+            ->setLimit(25)
+            ->execute()
+            ->first();
+          $isMember = CRM_Contact_BAO_GroupContact::isContactInGroup($c['id'], $mbGroup['id']);
+          if (!$isMember) {
+            $card['card_title'] = "Mast ej registreret";
+          }
           break;
         case 2: // Medlemskort
+          // Only one membership card!
+          $card['layout'] = 'single';
+          $card['copies'] = 1;
           if (empty($card['external_identifier'])) {
             $card['info'] = "IKKE MEDLEM";
-          } else {
-            $economicCustomer = \Civi\Api4\EconomicCustomer::get(FALSE)
-                ->addWhere('customerNumber', '=', ($c['external_identifier']))
-                ->setLimit(1)
+            break;
+          }
+          $kontingent = \Civi\Api4\OptionValue::get(TRUE)
+            ->addSelect('name')
+            ->addWhere('id', '=', $c['Ekstra_medlemsdata.Kontingent'])
+            ->execute()
+            ->first();
+          $k = $kontingent['name'] ?? '';
+          if (!empty($k) && $k === 'Passiv') {
+            $card['info'] = 'Passivt medlem';
+            break;
+          }
+          $economicCustomer = \Civi\Api4\EconomicCustomer::get(FALSE)
+              ->addWhere('customerNumber', '=', ($c['external_identifier']))
+              ->setLimit(1)
+              ->execute()
+              ->first() ?? null;
+          if ($economicCustomer) {
+            $isMember = \Civi\Api4\GroupContact::get(FALSE)
+                ->addWhere('contact_id', '=', $c['id'])
+                ->addWhere('group_id:name', '=', 'KasMedlemmer_2')
+                ->addWhere('status', '=', 'Added')
                 ->execute()
-                ->first() ?? null;
-            if ($economicCustomer) {
-              $isMember = \Civi\Api4\GroupContact::get(FALSE)
-                  ->addWhere('contact_id', '=', $c['id'])
-                  ->addWhere('group_id:name', '=', 'KasMedlemmer_2')
-                  ->addWhere('status', '=', 'Added')
-                  ->execute()
-                  ->count() > 0;
-              if (!$isMember) {
-                $card['info'] = "IKKE MEDLEM";
+                ->count() > 0;
+            if (!$isMember) {
+              $card['info'] = "IKKE MEDLEM";
+            } else {
+              $periode = self::halfYear();
+              if ($economicCustomer['dueAmount'] <= 0.0 ||
+                $periode['dage'] < 14) {
+                $card['info'] = $periode['start']->format('Y-m-d') . ' til ' . $periode['slut']->format('Y-m-d');
               } else {
-                $periode = self::halfYear();
-                if ($economicCustomer['dueAmount'] <= 0.0 or $periode['dage'] < 14) {
-                  $card['info'] = $periode['start']->format('Y-m-d') . ' til ' . $periode['slut']->format('Y-m-d');
-                } else {
-                  $card['info'] = "Ubetalt udestående";
-                }
+                $card['info'] = "Ubetalt udestående";
               }
             }
           }
           break;
         case 3: // Parkering
+          $carId = (int) ($options['car_id'] ?? 0);
+          if ($carId) {
+            $bil = \Civi\Api4\CustomValue::get('Bil', TRUE)
+                ->addWhere('id', '=', $carId)
+                ->execute()
+                ->first() ?? null;
+            if ($bil) {
+              $card['info'] = $bil['Nummerplade'];
+            }
+          }
           break;
         case 4: // Tilhører
           break;

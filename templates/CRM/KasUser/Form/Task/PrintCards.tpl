@@ -76,6 +76,14 @@
 {literal}
 <script type="text/javascript">
   CRM.$(function($) {
+    $("#profile").change(function() {
+        let add = "profile=" + $(this).val();
+        if (location.href.indexOf("?") === - 1) {
+            window.location = location.href + "?" + add;
+        } else {
+            window.location = location.href += "&" + add;
+        }
+    });
     function refresh() {
       var target = $('#qr_target').val();
       $('tr.businesscards-skip').toggle($('#layout').val() === 'a4');

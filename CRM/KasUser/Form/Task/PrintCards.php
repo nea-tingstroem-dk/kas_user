@@ -47,7 +47,7 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
     $this->assign('contactCount', count($this->_contactIds));
     $this->assign('logoHelp', $this->logoHelp());
     $this->assign('contactIdToken', '{contact_id}');
-    $this->addDefaultButtons(self::ts('Download PDF'), 'done');
+    $this->addDefaultButtons(empty($this->_contactIds) ? self::ts('Submit') :self::ts('Download PDF'), 'done');
   }
 
   public static function formRule($values) {
@@ -59,7 +59,7 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
   }
 
   public function setDefaultValues() {
-    $profile = CRM_Utils_Request::retrieve('profile', 'Integer')?? 1;
+    $profile = CRM_Utils_Request::retrieve('profile', 'Integer') ?? 1;
     $defaults = CRM_KasUser_Options::load($profile);
     $defaults['profile'] = $profile;
     $defaults['copies'] = count($this->_contactIds) === 1 && $defaults['layout'] === 'a4' ? 10 : 1;
@@ -76,7 +76,8 @@ class CRM_KasUser_Form_Task_PrintCards extends CRM_Contact_Form_Task {
     $values['show_address'] = !empty($values['show_address']);
     CRM_KasUser_Options::save($values, $values['profile']);
     if (empty($this->_contactIds)) {
-      parent::postProcess();
+      $url = CRM_Utils_System::url('civicrm/kas/brik-config', ['reset' => 1, 'profile' => $values['profile']]);
+      CRM_Core_Session::singleton()->replaceUserContext($url);
       return;
     }
 

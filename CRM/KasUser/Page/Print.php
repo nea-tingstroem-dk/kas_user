@@ -10,9 +10,15 @@
 class CRM_KasUser_Page_Print extends CRM_Core_Page {
 
   public function run() {
-    $cid = (int) CRM_Utils_Request::retrieveValue('cid', 'Positive', 0, FALSE, 'GET');
-    if (!$cid) {
-      $cid = (int) CRM_Core_Session::singleton()->getLoggedInContactID();
+    $currentUser = (int) CRM_Core_Session::singleton()->getLoggedInContactID();
+    $superUser = CRM_Core_Permission::check('print all kas cards', $currentUser) ?: 0;
+    if ($superUser) {
+      $cid = (int) CRM_Utils_Request::retrieveValue('cid', 'Positive');
+      if (!$cid) {
+        $cid = $currentUser;
+      }
+    } else  {
+      $cid = $currentUser;
     }
     $profileList = CRM_Core_OptionGroup::values('briktyper');
     $profile = (int) CRM_Utils_Request::retrieveValue('profile', 'Positive', 0, FALSE, 'GET');
@@ -20,7 +26,8 @@ class CRM_KasUser_Page_Print extends CRM_Core_Page {
     $copies = ($options['layout'] ?? 'a4') === 'single' ? 1 : 10;
     foreach ([
       'copies' => 'Positive',
-      'layout' => 'String'] as $key => $type) {
+      'layout' => 'String',
+      'car_id' => 'Positive'] as $key => $type) {
       $val = CRM_Utils_Request::retrieveValue($key, $type);
       if ($val) {
         switch ($key) {
@@ -31,6 +38,8 @@ class CRM_KasUser_Page_Print extends CRM_Core_Page {
             $options['layout'] = $val;
             $copies = ($options['layout'] ?? 'a4') === 'single' ? 1 : 10;
             break;
+          default:
+            $options[$key] = $val;
         }
       }
     }

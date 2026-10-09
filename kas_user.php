@@ -71,6 +71,21 @@ function kas_user_civicrm_summaryActions(&$actions, $contactID) {
 }
 
 /**
+ * Implements hook_civicrm_permission().
+ */
+function kas_user_civicrm_permission(&$permissions) {
+  $prefix = E::ts('KAS') . ': ';
+  $permissions['print own kas cards'] = [
+      'label' => $prefix . E::ts('Print egne KAS brikker'),
+      'description' => E::ts('Mastebrik, medlemskort, parkeringskort, mærkebrik'),
+    ];
+  $permissions['print all kas cards'] = [
+      'label' => $prefix . E::ts('Print alles KAS brikker'),
+      'description' => E::ts('Mastebrik, medlemskort, parkeringskort, mærkebrik'),
+    ];
+}
+
+/**
  * Implements hook_civicrm_preProcess().
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_preProcess
